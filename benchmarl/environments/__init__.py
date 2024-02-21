@@ -6,6 +6,7 @@
 
 from .common import Task
 from .pettingzoo.common import PettingZooTask
+from GodotRLPettingZooWrapper import GodotRLPettingZooWrapper
 from .smacv2.common import Smacv2Task
 from .vmas.common import VmasTask
 
@@ -17,6 +18,8 @@ for env in [VmasTask, Smacv2Task, PettingZooTask]:
         f"{env.env_name()}/{task.name.lower()}": task for task in env
     }
     task_config_registry.update(env_config_registry)
+
+task_config_registry["godotrl/B_ACE"]  =  GodotRLPettingZooWrapper
 
 
 from .pettingzoo.multiwalker import TaskConfig as MultiwalkerConfig
