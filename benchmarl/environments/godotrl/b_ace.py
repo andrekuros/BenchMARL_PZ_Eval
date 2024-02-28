@@ -21,28 +21,7 @@ from torchrl.envs.libs.pettingzoo import PettingZooWrapper
 from torchrl.envs.utils import MarlGroupMapType
 from GodotRLPettingZooWrapper import GodotRLPettingZooWrapper
 import random
-
-
-def wenv():
-    return PettingZooWrapper(
-                    env=GodotRLPettingZooWrapper(env_path="BVR_AirCombat/bin/FlyBy.exe", 
-                                                    num_agents = 2 , 
-                                                    show_window=True, 
-                                                    seed = 0,
-                                                    framerate = None,
-                                                    action_repeat = 10,
-                                                    speedup  = 100,
-                                                    convert_action_space = False), 
-                                                    
-                                                    # scenario=self.name.lower(),
-                                                    # num_envs=num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
-                                                # continuous_actions=True,#continuous_actions,  # Ignore this param if your env does not have this choice
-                                                use_mask=False, # Must use it since one player plays at a time
-                                                # seed=seed,
-                                                # device=device,
-                                                #categorical_actions=True,  # If your env has discrete actions, they need to be categorical (TorchRL can help with this)
-    )
-                                                
+                                    
 
 class B_ACE(Task):
     # Your task names.
@@ -62,7 +41,7 @@ class B_ACE(Task):
                                 env=GodotRLPettingZooWrapper(
                                     env_path="BVR_AirCombat/bin/FlyBy.exe", 
                                     num_agents = 2, 
-                                    show_window=False, 
+                                    show_window=True, 
                                     seed = seed,
                                     port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),
                                     framerate = None,
@@ -71,9 +50,9 @@ class B_ACE(Task):
                                     convert_action_space = False), 
                                     
                                     # scenario=self.name.lower(),
-                                    # num_envs=num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
+                                    # num_envs=2,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
                                     # continuous_actions=continuous_actions,#continuous_actions,  # Ignore this param if your env does not have this choice
-                                    use_mask=False, # Must use it since one player plays at a time
+                                    use_mask=True, # Must use it since one player plays at a time
                                     # seed=seed,
                                     # device=device,
                                     #categorical_actions=True,  # If your env has discrete actions, they need to be categorical (TorchRL can help with this)
@@ -184,12 +163,13 @@ class B_ACE(Task):
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         num_agents = len(env.agents)  # Dynamically determine the number of agents
         # Create a spec for aggregated observations under a single group "agent_1"
+        obs_len = 26
         observation_spec = CompositeSpec({
             'agent': CompositeSpec({
                 'observation': BoundedTensorSpec(
-                    shape=torch.Size([num_agents, 15]),  # Adjust shape based on aggregation
-                    low=torch.full((num_agents, 15), -float('inf'), dtype=torch.float32, device='cpu'),
-                    high=torch.full((num_agents, 15), float('inf'), dtype=torch.float32, device='cpu'),
+                    shape=torch.Size([num_agents, obs_len]),  # Adjust shape based on aggregation
+                    low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device='cuda'),
+                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),
                     dtype=torch.float32,
                     device='cuda',
                 ),
@@ -207,8 +187,8 @@ class B_ACE(Task):
             'agent': CompositeSpec({
                 'action': BoundedTensorSpec(
                     shape=torch.Size([2, num_actions]),  # Assuming actions are aggregated, adjust shape as needed
-                    low=torch.full((2, num_actions), -1.0, dtype=torch.float32, device='cpu'),  # Adjust bounds as needed
-                    high=torch.full((2, num_actions), 1.0, dtype=torch.float32, device='cpu'),  # Adjust bounds as needed
+                    low=torch.full((2, num_actions), -1.0, dtype=torch.float32, device='cuda'),  # Adjust bounds as needed
+                    high=torch.full((2, num_actions), 1.0, dtype=torch.float32, device='cuda'),  # Adjust bounds as needed
                     dtype=torch.float32,
                     device='cuda',
                 ),
