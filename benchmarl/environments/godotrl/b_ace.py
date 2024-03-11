@@ -62,7 +62,9 @@ class B_ACE(Task):
                                     
                                     # scenario=self.name.lower(),
                                     # num_envs=2,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
+                                    # num_envs=2,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
                                     # continuous_actions=continuous_actions,#continuous_actions,  # Ignore this param if your env does not have this choice
+                                    use_mask=True, # Must use it since one player plays at a time
                                     use_mask=True, # Must use it since one player plays at a time
                                     # seed=seed,
                                     # device=device,
@@ -178,6 +180,9 @@ class B_ACE(Task):
         observation_spec = CompositeSpec({
             'agent': CompositeSpec({
                 'observation': BoundedTensorSpec(
+                    shape=torch.Size([num_agents, obs_len]),  # Adjust shape based on aggregation
+                    low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device='cuda'),
+                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),
                     shape=torch.Size([num_agents, obs_len]),  # Adjust shape based on aggregation
                     low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device='cuda'),
                     high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),
