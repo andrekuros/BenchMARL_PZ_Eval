@@ -22,27 +22,15 @@ from torchrl.envs.utils import MarlGroupMapType
 from GodotRLPettingZooWrapper import GodotRLPettingZooWrapper
 import random
 
+from dataclasses import dataclass, MISSING
 
-def wenv():
-    return PettingZooWrapper(
-                    env=GodotRLPettingZooWrapper(env_path="BVR_AirCombat/bin/FlyBy.exe", 
-                                                    num_agents = 2 , 
-                                                    show_window=True, 
-                                                    seed = 0,
-                                                    framerate = None,
-                                                    action_repeat = 10,
-                                                    speedup  = 100,
-                                                    convert_action_space = False), 
-                                                    
-                                                    # scenario=self.name.lower(),
-                                                    # num_envs=num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
-                                                # continuous_actions=True,#continuous_actions,  # Ignore this param if your env does not have this choice
-                                                use_mask=False, # Must use it since one player plays at a time
-                                                # seed=seed,
-                                                # device=device,
-                                                #categorical_actions=True,  # If your env has discrete actions, they need to be categorical (TorchRL can help with this)
-    )
-                                                
+@dataclass
+class TaskConfig:
+    task: str = MISSING
+    max_cycles: int = MISSING
+    local_ratio: float = MISSING
+    N: int = MISSING
+                                    
 
 class B_ACE(Task):
     # Your task names.
@@ -60,20 +48,22 @@ class B_ACE(Task):
     ) -> Callable[[], EnvBase]:
          return lambda: PettingZooWrapper(
                                 env=GodotRLPettingZooWrapper(
-                                    env_path="BVR_AirCombat/bin/FlyBy.exe", 
-                                    num_agents = 2, 
-                                    show_window=False, 
-                                    seed = seed,
-                                    port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),
-                                    framerate = None,
-                                    action_repeat = 20,
-                                    speedup  = 100,
-                                    convert_action_space = False), 
+                                    #env_path=self.config.pop("BVR_AirCombat/bin/BVR_1x1_FullView.exe", "BVR_AirCombat/bin/BVR_1x1_FullView.exe"), 
+                                    #num_agents = 1, 
+                                    #show_window=True, 
+                                    #seed = seed,
+                                    #port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),
+                                    #framerate = None,
+                                    #action_repeat = 20,
+                                    #action_type = "Low_Level_Continuous",#"Low_Level_Continuous"
+                                    #speedup  = 100,
+                                    convert_action_space = False,
+                                    **self.config), 
                                     
                                     # scenario=self.name.lower(),
-                                    # num_envs=num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
+                                    # num_envs=2,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
                                     # continuous_actions=continuous_actions,#continuous_actions,  # Ignore this param if your env does not have this choice
-                                    use_mask=False, # Must use it since one player plays at a time
+                                    use_mask=True, # Must use it since one player plays at a time
                                     # seed=seed,
                                     # device=device,
                                     #categorical_actions=True,  # If your env has discrete actions, they need to be categorical (TorchRL can help with this)
@@ -81,11 +71,11 @@ class B_ACE(Task):
      
     def supports_continuous_actions(self) -> bool:
         # Does the environment support continuous actions?
-        return True
+        return False
 
     def supports_discrete_actions(self) -> bool:
         # Does the environment support discrete actions?
-        return False
+        return True
 
     def has_render(self, env: EnvBase) -> bool:
         # Does the env have a env.render(mode="rgb_array") or env.render() function?
@@ -184,12 +174,13 @@ class B_ACE(Task):
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         num_agents = len(env.agents)  # Dynamically determine the number of agents
         # Create a spec for aggregated observations under a single group "agent_1"
+        obs_len = 19
         observation_spec = CompositeSpec({
             'agent': CompositeSpec({
                 'observation': BoundedTensorSpec(
-                    shape=torch.Size([num_agents, 15]),  # Adjust shape based on aggregation
-                    low=torch.full((num_agents, 15), -float('inf'), dtype=torch.float32, device='cpu'),
-                    high=torch.full((num_agents, 15), float('inf'), dtype=torch.float32, device='cpu'),
+                    shape=torch.Size([num_agents, obs_len]),  # Adjust shape based on aggregation
+                    low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device='cuda'),
+                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),
                     dtype=torch.float32,
                     device='cuda',
                 ),
@@ -201,22 +192,57 @@ class B_ACE(Task):
 
 
     def action_spec(self, env: EnvBase) -> CompositeSpec:
-        # Assuming continuous actions for all agents, with 4 actions each
-        num_actions = 4  # Number of continuous actions
-        action_spec = CompositeSpec({
-            'agent': CompositeSpec({
-                'action': BoundedTensorSpec(
-                    shape=torch.Size([2, num_actions]),  # Assuming actions are aggregated, adjust shape as needed
-                    low=torch.full((2, num_actions), -1.0, dtype=torch.float32, device='cpu'),  # Adjust bounds as needed
-                    high=torch.full((2, num_actions), 1.0, dtype=torch.float32, device='cpu'),  # Adjust bounds as needed
-                    dtype=torch.float32,
-                    device='cuda',
-                ),
-                # Include additional specs like 'action_mask' if applicable
+        
+        action_type = env.action_type
+        
+        if action_type == "Low_Level_Continuous":
+            # Assuming continuous actions for all agents, with 4 actions each
+            num_actions = 4  # Number of continuous actions
+            num_agents = len(env.agents) 
+            action_spec = CompositeSpec({
+                'agent': CompositeSpec({
+                    'action': BoundedTensorSpec(
+                        shape=torch.Size([num_agents, num_actions]),  # Assuming actions are aggregated, adjust shape as needed
+                        low=torch.full((num_agents, num_actions), -1.0, dtype=torch.float32, device='cuda'),  # Adjust bounds as needed
+                        high=torch.full((num_agents, num_actions), 1.0, dtype=torch.float32, device='cuda'),  # Adjust bounds as needed
+                        dtype=torch.float32,
+                        device='cuda',
+                    ),
+                    # Include additional specs like 'action_mask' if applicable
+                })
             })
-        })
+            
+        elif action_type == "Low_Level_Discrete":
+            # Define the action spec for discrete actions
+            total_actions = 5 * 5 * 2  # Total combinations
+            action_spec = CompositeSpec({
+                'agent': CompositeSpec({
+                    'action': DiscreteTensorSpec( 
+                            total_actions ,
+                            shape=torch.Size([env.num_agents]),
+                            dtype=torch.float32,
+                            device='cuda')
+                })
+            })
+        
         return action_spec
 
- 
+        
+    # def encode_action(turn_input, level_input, fire_input):
+    #     # Example encoding, adjust based on your action space size
+    #     return turn_input + (level_input * 5) + (fire_input * 25)
 
- 
+
+    # def decode_action(self, encoded_action):
+    #     # Decode back to the original action tuple
+    #     turn_input = encoded_action % 5
+    #     level_input = (encoded_action // 5) % 5
+    #     fire_input = (encoded_action // 25) % 2
+    #     return turn_input, level_input, fire_input
+
+  
+       
+
+    
+
+    

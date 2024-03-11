@@ -2,4 +2,14 @@ defaults:
   - _self_
   - godotrl_b_ace
 
-task: "b_ace"
+task: b_ace_v1
+env_path: "BVR_AirCombat/bin/B_ACE_v1.exe" 
+num_allies : 1
+num_enemies: 1
+show_window: True
+seed: 0
+port: 12500
+action_repeat: 20
+action_type: "Low_Level_Discrete"
+speedup:  2000
+full_observation: False
