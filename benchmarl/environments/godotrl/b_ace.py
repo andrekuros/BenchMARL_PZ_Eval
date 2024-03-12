@@ -39,31 +39,24 @@ class B_ACE(Task):
     ) -> Callable[[], EnvBase]:
          return lambda: PettingZooWrapper(
                                 env=GodotRLPettingZooWrapper(
-                                    #env_path=self.config.pop("BVR_AirCombat/bin/BVR_1x1_FullView.exe", "BVR_AirCombat/bin/BVR_1x1_FullView.exe"), 
+                                    
                                     #num_agents = 1, 
-                                    #show_window=True, 
                                     #seed = seed,
                                     #port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),
-                                    #framerate = None,
-                                    #action_repeat = 20,
-                                    #action_type = "Low_Level_Continuous",#"Low_Level_Continuous"
-                                    #speedup  = 100,
                                     convert_action_space = False,
                                     **self.config), 
                                     
                                     # scenario=self.name.lower(),
-                                    # num_envs=2,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
-                                    # num_envs=2,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
+                                    #num_envs=10,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
                                     # continuous_actions=continuous_actions,#continuous_actions,  # Ignore this param if your env does not have this choice                                    
-                                    use_mask=True, # Must use it since one player plays at a time
-                                    # seed=seed,
-                                    # device=device,
+                                    use_mask=True, # Must use it since one player plays at a time                                    
+                                    #device=device,
                                     #categorical_actions=True,  # If your env has discrete actions, they need to be categorical (TorchRL can help with this)
                         ) 
      
     def supports_continuous_actions(self) -> bool:
         # Does the environment support continuous actions?
-        return False
+        return True
 
     def supports_discrete_actions(self) -> bool:
         # Does the environment support discrete actions?
@@ -75,7 +68,7 @@ class B_ACE(Task):
 
     def max_steps(self, env: EnvBase) -> int:
         # Maximum number of steps for a rollout during evaluation
-        return 1000
+        return 1500
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         # The group map mapping group names to agent names
