@@ -21,16 +21,7 @@ from torchrl.envs.libs.pettingzoo import PettingZooWrapper
 from torchrl.envs.utils import MarlGroupMapType
 from GodotRLPettingZooWrapper import GodotRLPettingZooWrapper
 import random
-
-from dataclasses import dataclass, MISSING
-
-@dataclass
-class TaskConfig:
-    task: str = MISSING
-    max_cycles: int = MISSING
-    local_ratio: float = MISSING
-    N: int = MISSING
-                                    
+                                 
 
 class B_ACE(Task):
     # Your task names.
@@ -181,10 +172,7 @@ class B_ACE(Task):
                 'observation': BoundedTensorSpec(
                     shape=torch.Size([num_agents, obs_len]),  # Adjust shape based on aggregation
                     low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device='cuda'),
-                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),
-                    shape=torch.Size([num_agents, obs_len]),  # Adjust shape based on aggregation
-                    low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device='cuda'),
-                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),
+                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),                    
                     dtype=torch.float32,
                     device='cuda',
                 ),
