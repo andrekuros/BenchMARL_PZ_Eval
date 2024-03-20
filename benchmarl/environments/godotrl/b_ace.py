@@ -40,6 +40,7 @@ class B_ACE(Task):
          return lambda: PettingZooWrapper(
                                 env=GodotRLPettingZooWrapper(
                                     
+                                    #num_envs=10,
                                     #num_agents = 1, 
                                     #seed = seed,
                                     #port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),
@@ -76,18 +77,6 @@ class B_ACE(Task):
         
         return {"agent" : [agent for agent in env.agents]}
         
-        # return {agent : [agent] for agent in env.agents}
-
-    # def observation_spec(self, env: EnvBase) -> CompositeSpec:
-    #     # A spec for the observation.
-    #     # Must be a CompositeSpec with one (group_name, "observation") entry per group.
-    #     return env.full_observation_spec
-
-    # def action_spec(self, env: EnvBase) -> CompositeSpec:
-    #     # A spec for the action.
-    #     # If provided, must be a CompositeSpec with one (group_name, "action") entry per group.
-    #     return env.full_action_spec
-
     def state_spec(self, env: EnvBase) -> Optional[CompositeSpec]:
         # A spec for the state.
         # If provided, must be a CompositeSpec with one "state" entry
@@ -102,47 +91,6 @@ class B_ACE(Task):
         # A spec for the info.
         # If provided, must be a CompositeSpec with one (group_name, "info") entry per group (this entry can be composite).
         return None
-
-    # def observation_spec(self, env: EnvBase) -> CompositeSpec:
-    #     # Dynamically create an observation spec for each agent, naming the group after the agent
-    #     observation_specs = {}
-    #     for agent_name in env.agents:
-    #         observation_specs[agent_name] = CompositeSpec({
-    #             'observation': BoundedTensorSpec(
-    #                 shape=torch.Size([1, 15]),  # Assuming this is the shape of each agent's observation
-    #                 low=torch.full((1, 15), -float('inf'), dtype=torch.float32),
-    #                 high=torch.full((1, 15), float('inf'), dtype=torch.float32),
-    #                 dtype=torch.float32,
-    #                 device='cuda',
-    #             ),
-    #             # Add 'mask' or other specs as needed, depending on your environment's requirements
-    #         })
-
-    #     return CompositeSpec(observation_specs)
-
-
-
-    # def action_spec(self, env: EnvBase) -> CompositeSpec:
-    #     action_specs = {}
-    #     for agent_name in env.agents:
-    #         # Assuming each action has a lower bound of -1 and an upper bound of 1
-    #         # Adjust the bounds according to your environment's requirements
-    #         low = torch.full((4,), -1.0, dtype=torch.float32, device='cuda')
-    #         high = torch.full((4,), 1.0, dtype=torch.float32, device='cuda')
-
-    #         action_specs[agent_name] = CompositeSpec({
-    #             'action': BoundedTensorSpec(
-    #                 shape=torch.Size([4]),  # 4 continuous actions
-    #                 low=low,
-    #                 high=high,
-    #                 dtype=torch.float32,  # Continuous actions are typically represented using floating-point numbers
-    #                 device='cuda',  # Assuming you want to place the actions on a CUDA device
-    #             ),
-    #             # If your environment uses action masks to indicate valid actions, include them here
-    #             # 'action_mask': ...
-    #         })
-
-    #     return CompositeSpec(action_specs)
 
 
     @staticmethod
@@ -159,7 +107,7 @@ class B_ACE(Task):
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         num_agents = len(env.agents)  # Dynamically determine the number of agents
         # Create a spec for aggregated observations under a single group "agent_1"
-        obs_len = 19
+        obs_len = env.observation_space("agent_0").shape[0]
         observation_spec = CompositeSpec({
             'agent': CompositeSpec({
                 'observation': BoundedTensorSpec(
@@ -205,26 +153,12 @@ class B_ACE(Task):
                     'action': DiscreteTensorSpec( 
                             total_actions ,
                             shape=torch.Size([env.num_agents]),
-                            dtype=torch.float32,
+                            dtype=torch.int64,
                             device='cuda')
                 })
             })
         
         return action_spec
-
-        
-    # def encode_action(turn_input, level_input, fire_input):
-    #     # Example encoding, adjust based on your action space size
-    #     return turn_input + (level_input * 5) + (fire_input * 25)
-
-
-    # def decode_action(self, encoded_action):
-    #     # Decode back to the original action tuple
-    #     turn_input = encoded_action % 5
-    #     level_input = (encoded_action // 5) % 5
-    #     fire_input = (encoded_action // 25) % 2
-    #     return turn_input, level_input, fire_input
-
   
        
 
