@@ -26,9 +26,7 @@ import random
 class B_ACE(Task):
     # Your task names.
     # Their config will be loaded from benchmarl/conf/task/customenv
-
-    b_ace = None  # Loaded automatically from benchmarl/conf/task/customenv/task_1
-    #TASK_2 = None  # Loaded automatically from benchmarl/conf/task/customenv/task_2    
+    b_ace = None  # Loaded automatically from benchmarl/conf/task/customenv/task_1    
 
     def get_env_fun(
         self,
@@ -43,8 +41,9 @@ class B_ACE(Task):
                                     #num_envs=10,
                                     #num_agents = 1, 
                                     #seed = seed,
-                                    #port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),
+                                    #port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),                                    
                                     convert_action_space = False,
+                                    device = device,
                                     **self.config), 
                                     
                                     # scenario=self.name.lower(),
@@ -106,16 +105,16 @@ class B_ACE(Task):
 
     def observation_spec(self, env: EnvBase) -> CompositeSpec:
         num_agents = len(env.agents)  # Dynamically determine the number of agents
-        # Create a spec for aggregated observations under a single group "agent_1"
+        # Create a spec for aggregated observations under a single group "agent_1"        
         obs_len = env.observation_space("agent_0").shape[0]
         observation_spec = CompositeSpec({
             'agent': CompositeSpec({
                 'observation': BoundedTensorSpec(
                     shape=torch.Size([num_agents, obs_len]),  # Adjust shape based on aggregation
-                    low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device='cuda'),
-                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device='cuda'),                    
+                    low=torch.full((num_agents, obs_len), -float('inf'), dtype=torch.float32, device=env.device),
+                    high=torch.full((num_agents, obs_len), float('inf'), dtype=torch.float32, device=env.device),                    
                     dtype=torch.float32,
-                    device='cuda',
+                    device=env.device,
                 ),
                 # If you have a mask or other specs per agent, adjust accordingly
             })
@@ -136,10 +135,10 @@ class B_ACE(Task):
                 'agent': CompositeSpec({
                     'action': BoundedTensorSpec(
                         shape=torch.Size([num_agents, num_actions]),  # Assuming actions are aggregated, adjust shape as needed
-                        low=torch.full((num_agents, num_actions), -1.0, dtype=torch.float32, device='cuda'),  # Adjust bounds as needed
-                        high=torch.full((num_agents, num_actions), 1.0, dtype=torch.float32, device='cuda'),  # Adjust bounds as needed
+                        low=torch.full((num_agents, num_actions), -1.0, dtype=torch.float32, device=env.device),  # Adjust bounds as needed
+                        high=torch.full((num_agents, num_actions), 1.0, dtype=torch.float32, device=env.device),  # Adjust bounds as needed
                         dtype=torch.float32,
-                        device='cuda',
+                        device=env.device,
                     ),
                     # Include additional specs like 'action_mask' if applicable
                 })
@@ -154,7 +153,7 @@ class B_ACE(Task):
                             total_actions ,
                             shape=torch.Size([env.num_agents]),
                             dtype=torch.int64,
-                            device='cuda')
+                            device=env.device)
                 })
             })
         
