@@ -37,16 +37,11 @@ class B_ACE(Task):
     ) -> Callable[[], EnvBase]:
          return lambda: PettingZooWrapper(
                                 env=GodotRLPettingZooWrapper(
-                                    
-                                    #num_envs=10,
-                                    #num_agents = 1, 
-                                    #seed = seed,
-                                    #port = GodotRLPettingZooWrapper.DEFAULT_PORT + random.randint(0,3000),                                    
+                                                                                                      
                                     convert_action_space = False,
                                     device = device,
                                     **self.config), 
-                                    
-                                    # scenario=self.name.lower(),
+                                                                        
                                     #num_envs=10,#num_envs,  # Number of vectorized envs (do not use this param if the env is not vectorized)
                                     # continuous_actions=continuous_actions,#continuous_actions,  # Ignore this param if your env does not have this choice                                    
                                     use_mask=True, # Must use it since one player plays at a time                                    
@@ -68,7 +63,7 @@ class B_ACE(Task):
 
     def max_steps(self, env: EnvBase) -> int:
         # Maximum number of steps for a rollout during evaluation
-        return 1500
+        return 1800
 
     def group_map(self, env: EnvBase) -> Dict[str, List[str]]:
         # The group map mapping group names to agent names
